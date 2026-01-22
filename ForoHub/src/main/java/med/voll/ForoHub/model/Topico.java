@@ -1,9 +1,11 @@
 package med.voll.ForoHub.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import med.voll.ForoHub.datos.DatosActualizacionTopico;
 import med.voll.ForoHub.datos.DatosRegistroTopico;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -53,5 +55,27 @@ public class Topico {
         this.autor = autor;
         this.curso = curso;
         this.respuestas = respuestas != null ? respuestas : new ArrayList<>();
+    }
+
+    public void actualizarInformacion(@Valid DatosActualizacionTopico datos) {
+        if (datos.titulo() != null) {
+            this.titulo = datos.titulo();
+        }
+        if (datos.mensaje() != null) {
+            this.mensaje = datos.mensaje();
+        }
+        if (datos.fechaCreacion() != null) {
+            this.fechaCreacion = datos.fechaCreacion();
+        }
+        if (datos.fechaCreacion() != null) {
+            this.fechaCreacion = datos.fechaCreacion();
+        }
+        if (datos.status() != null) {
+            this.status = datos.status();
+        }
+        if (datos.autor() != null) {
+        this.autor = datos.autor();
+        }
+
     }
 }
