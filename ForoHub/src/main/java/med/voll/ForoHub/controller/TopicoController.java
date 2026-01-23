@@ -197,6 +197,22 @@ public class TopicoController {
 
         return ResponseEntity.ok(respuesta);
     }
+    //pera eliminar un topico
+    @DeleteMapping("/{id}")
+    @Transactional
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        if (id == null || id <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El ID del tópico es obligatorio.");
+        }
+
+        Topico topico = topicoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tópico no encontrado."));
+
+        topico.setActivo(false); // Marcar como inactivo
+        topicoRepository.save(topico);
+
+        return ResponseEntity.noContent().build(); // 204 No Content
+    }
 
 
 }

@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/cursos")
 public class CursoController {
@@ -21,5 +23,10 @@ public class CursoController {
         var saved = cursoRepository.save(curso);
         var uri = uriBuilder.path("/cursos/{id}").buildAndExpand(saved.getId()).toUri();
         return ResponseEntity.created(uri).build();//permite construir respuestas HTTP completas (código de estado, encabezados, cuerpo).
+    }
+    //Endpoint para listar todos los cursos
+    @GetMapping
+    public ResponseEntity<List<Curso>> listarCursos() {
+        return ResponseEntity.ok(cursoRepository.findAll());
     }
 }

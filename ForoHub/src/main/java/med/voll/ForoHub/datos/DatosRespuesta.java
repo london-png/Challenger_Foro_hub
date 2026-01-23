@@ -1,13 +1,15 @@
 package med.voll.ForoHub.datos;
 
-import java.time.LocalDateTime;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public record DatosRespuesta(
-        Long id,
+        @NotBlank(message = "El mensaje es obligatorio")
         String mensaje,
-        LocalDateTime fechaCreacion,
-        String autor,
-        Boolean solucion // o String si es texto, pero boolean es más lógico para "solución"
 
-) {
-}
+        @NotBlank(message = "El autor es obligatorio")
+        String autor,
+
+        @NotNull(message = "El campo 'solucion' es obligatorio")
+        Boolean solucion
+) {}

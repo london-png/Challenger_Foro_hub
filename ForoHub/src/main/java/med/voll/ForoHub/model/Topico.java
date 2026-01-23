@@ -26,7 +26,7 @@ public class Topico {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    private boolean activo =true; //agregamos la nueva columna que creamos
     private String titulo;
     private String mensaje;
     private LocalDateTime fechaCreacion;
@@ -48,6 +48,7 @@ public class Topico {
     //Constructor explícito para uso en el controlador
     public Topico(Long id, String titulo, String mensaje, LocalDateTime fechaCreacion, Status status, String autor, Curso curso, List<Respuesta> respuestas) {
         this.id = id;
+        this.activo = true; // inicializacion como activo
         this.titulo = titulo;
         this.mensaje = mensaje;
         this.fechaCreacion = fechaCreacion;
@@ -74,8 +75,14 @@ public class Topico {
             this.status = datos.status();
         }
         if (datos.autor() != null) {
-        this.autor = datos.autor();
+            this.autor = datos.autor();
         }
 
     }
+
+    //se crea el metodo para eliminar
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
+    }
+
 }

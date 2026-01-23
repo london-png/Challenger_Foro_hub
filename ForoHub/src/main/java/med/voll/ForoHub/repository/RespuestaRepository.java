@@ -14,4 +14,8 @@ public interface RespuestaRepository extends JpaRepository<Respuesta, Long> {
 
     // Método para encontrar todas las respuestas de un tópico (opcional, pero útil)
     List<Respuesta> findByTopico(Topico topico);
+
+    // método: obtener solo las soluciones
+    List<Respuesta> findByTopicoIdAndSolucionTrue(Long topicoId);
+
 }
