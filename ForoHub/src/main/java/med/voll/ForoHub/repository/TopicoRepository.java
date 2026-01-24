@@ -8,13 +8,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-//con esta linea ya incluye todo lo de un CRUD<Topico, Long> la clase que se va a tomar, long que es el id de esa clase
+// Incluye operaciones CRUD básicas para Topico (ID de tipo Long)
 @Where(clause = "activo = true")
 public interface TopicoRepository extends JpaRepository<Topico, Long> {
+
     boolean existsByTituloAndMensaje(String titulo, String mensaje);
 
-
-    //metodo para buscar por nombre del curso y el año
+    // Método para buscar por nombre del curso (insensible a mayúsculas) y año
     @Query("SELECT t FROM Topico t WHERE " +
             "t.activo = true AND " +
             "( :nombreCurso IS NULL OR LOWER(t.curso.nombre) = LOWER(:nombreCurso) ) AND " +
@@ -23,4 +23,8 @@ public interface TopicoRepository extends JpaRepository<Topico, Long> {
             @Param("nombreCurso") String nombreCurso,
             @Param("ano") Integer ano,
             Pageable pageable);
+
+    //para consultar todos los topicos solucionados con solucion =true
+    @Query("SELECT DISTINCT t FROM Topico t JOIN t.respuestas r WHERE r.solucion = true AND t.activo = true")
+    Page<Topico> findAllWithSolucion(Pageable pageable);
 }

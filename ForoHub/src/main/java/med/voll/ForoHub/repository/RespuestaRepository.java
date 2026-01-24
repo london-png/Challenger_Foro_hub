@@ -18,4 +18,7 @@ public interface RespuestaRepository extends JpaRepository<Respuesta, Long> {
     // método: obtener solo las soluciones
     List<Respuesta> findByTopicoIdAndSolucionTrue(Long topicoId);
 
+   // Verificar si ya existe una respuesta con el mismo mensaje, autor y tópico
+    boolean existsByMensajeAndAutorAndTopico(String mensaje, String autor, Topico topico);
+
 }

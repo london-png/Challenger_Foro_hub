@@ -18,5 +18,5 @@ public record DatosActualizacionTopico(
         String autor,
 
         //para actualizar el cuerso
-          Long cursoId
+          String cursoId
 ) {}

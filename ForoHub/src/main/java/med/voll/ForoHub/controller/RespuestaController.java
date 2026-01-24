@@ -36,11 +36,23 @@ public class RespuestaController {
         Topico topico = topicoRepository.findById(idTopico)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tópico no encontrado"));
 
+        // === Validar que 'solucion' sea "true" o "false" (ignorando mayúsculas) ===
+        String solucionStr = datos.solucion().trim();
+        if (!solucionStr.equalsIgnoreCase("true") && !solucionStr.equalsIgnoreCase("false")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El campo 'solucion' solo puede ser 'true' o 'false'.");
+        }
+        Boolean solucion = Boolean.parseBoolean(solucionStr);
+
+        // === Validar que no exista una respuesta duplicada ===
+        if (respuestaRepository.existsByMensajeAndAutorAndTopico(datos.mensaje(), datos.autor(), topico)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe una respuesta idéntica para este tópico.");
+        }
+
         Respuesta respuesta = new Respuesta();
         respuesta.setMensaje(datos.mensaje());
         respuesta.setFechaCreacion(LocalDateTime.now());
         respuesta.setAutor(datos.autor());
-        respuesta.setSolucion(datos.solucion() != null ? datos.solucion() : false);
+        respuesta.setSolucion(solucion);
         respuesta.setTopico(topico);
 
         if (respuesta.getActivo() == null) {
@@ -72,14 +84,14 @@ public class RespuestaController {
                 respuesta.getMensaje(),
                 respuesta.getFechaCreacion(),
                 respuesta.getAutor(),
-                respuesta.isSolucion(), // ✅ Usa isSolucion() para booleanos
+                respuesta.isSolucion(),
                 respuesta.getTopico().getId()
         );
     }
-    //Get para consultar los topicos ya solucionados
+
+    // Get para consultar los tópicos ya solucionados
     @GetMapping("/soluciones/{topicoId}")
     public ResponseEntity<List<DatosDetalleRespuesta>> obtenerSoluciones(@PathVariable Long topicoId) {
-        // Verificar que el tópico exista
         if (!topicoRepository.existsById(topicoId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tópico no encontrado.");
         }

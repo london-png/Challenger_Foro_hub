@@ -1,5 +1,6 @@
 package med.voll.ForoHub.datos;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -18,5 +19,6 @@ public record DatosRegistroTopico(
         String autor,
 
         @NotNull(message = "El cursoId es obligatorio")
-        Long cursoId  // Solo el ID del curso, no el objeto completo
+        //@Min(value = 1, message = "El cursoId debe ser un número entero positivo")
+        String cursoId  // Solo el ID del curso, no el objeto completo
 ) {}
