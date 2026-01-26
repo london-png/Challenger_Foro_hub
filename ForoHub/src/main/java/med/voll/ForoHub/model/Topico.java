@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import med.voll.ForoHub.datos.DatosActualizacionTopico;
-import med.voll.ForoHub.datos.DatosRegistroTopico;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
