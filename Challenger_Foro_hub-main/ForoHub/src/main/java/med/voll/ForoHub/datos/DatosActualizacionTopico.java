@@ -1,8 +1,7 @@
 package med.voll.ForoHub.datos;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import med.voll.ForoHub.model.Status;
+import med.voll.ForoHub.domain.Status;
 
 import java.time.LocalDateTime;
 

@@ -1,8 +1,8 @@
 package med.voll.ForoHub.datos;
 
-import med.voll.ForoHub.model.Respuesta;
-import med.voll.ForoHub.model.Status;
-import med.voll.ForoHub.model.Topico;
+import med.voll.ForoHub.domain.Respuesta;
+import med.voll.ForoHub.domain.Status;
+import med.voll.ForoHub.domain.Topico;
 
 import java.time.LocalDateTime;
 

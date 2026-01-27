@@ -2,8 +2,8 @@
 
 package med.voll.ForoHub.repository;
 
-import med.voll.ForoHub.model.Respuesta;
-import med.voll.ForoHub.model.Topico;
+import med.voll.ForoHub.domain.Respuesta;
+import med.voll.ForoHub.domain.Topico;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

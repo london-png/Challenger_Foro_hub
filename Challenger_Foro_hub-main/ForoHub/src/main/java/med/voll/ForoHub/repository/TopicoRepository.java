@@ -1,6 +1,6 @@
 package med.voll.ForoHub.repository;
 
-import med.voll.ForoHub.model.Topico;
+import med.voll.ForoHub.domain.Topico;
 import org.hibernate.annotations.Where;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

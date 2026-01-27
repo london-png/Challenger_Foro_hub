@@ -3,7 +3,7 @@ package med.voll.ForoHub.controller;
 
 import jakarta.validation.Valid;
 import med.voll.ForoHub.datos.DatosRegistroCurso;
-import med.voll.ForoHub.model.Curso;
+import med.voll.ForoHub.domain.Curso;
 import med.voll.ForoHub.repository.CursoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

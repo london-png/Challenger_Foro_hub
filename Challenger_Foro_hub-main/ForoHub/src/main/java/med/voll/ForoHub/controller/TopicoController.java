@@ -3,7 +3,7 @@ package med.voll.ForoHub.controller;
 import jakarta.validation.Valid;
 import med.voll.ForoHub.datos.*;
 import med.voll.ForoHub.filtro.FiltroDatosTopico;
-import med.voll.ForoHub.model.Topico;
+import med.voll.ForoHub.domain.Topico;
 import med.voll.ForoHub.repository.TopicoRepository;
 import med.voll.ForoHub.service.TopicoService;
 import org.springframework.data.domain.Page;
