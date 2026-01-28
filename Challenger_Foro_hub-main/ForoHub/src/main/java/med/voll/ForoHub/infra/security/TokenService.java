@@ -1,0 +1,58 @@
+package med.voll.ForoHub.infra.security;
+
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTCreationException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import med.voll.ForoHub.domain.usuario.Usuario;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Date;
+
+@Service
+public class TokenService {
+
+    //como optener secret de nuestra application.properties
+    @Value("${api.security.token.secret}")
+    private String secret;
+
+    public String generarToken(Usuario usuario) {
+        //generacion de nuestro token
+        try {
+            var algoritmo = Algorithm.HMAC256(secret);
+            return JWT.create() //sirve para crear
+                    .withIssuer("forohub voll.med") //dice cual es el servidor que esta firmando ese token
+                    .withSubject(usuario.getLogin()) // el usuario de quien va a recibir el token
+                    .withExpiresAt(fechaExpiracion())
+                    .sign(algoritmo); // sirve para pasar el algoritmo
+        } catch (JWTCreationException exception) {
+            throw new RuntimeException("error al generar el token JWT", exception);
+        }
+
+    }
+
+    //se crea el metodo para fechaExpiracion
+    private Instant fechaExpiracion() {
+        return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-05:00")); //desde ahora y dos horas despues la expire
+    }
+
+    //vamos a crear un metodo para obtener el subject de un token
+    public String getSubJect(String tokenJWT) {
+
+        //para validar un token
+        try {
+            var algoritmo = Algorithm.HMAC256(secret);
+            return JWT.require(algoritmo)
+                    .withIssuer("forohub voll.med")
+                    .build()
+                    .verify(tokenJWT)
+                    .getSubject();// obtiene subject si es el correcto
+        } catch (JWTVerificationException exception) {
+            throw new RuntimeException("Token JWT invalido o expirado!");
+        }
+    }
+}

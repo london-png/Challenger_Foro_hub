@@ -2,6 +2,7 @@ package med.voll.ForoHub.infra.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -23,6 +24,14 @@ public class SecurityConfigurations {
 
         //debemos convertir el sistema stateful en stateless, tenemos que deshabilitar esos formularios de loging
                 .sessionManagement(sm ->sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                //indicamos que URls estan disponibles y cuales no
+                .authorizeHttpRequests(req -> {
+                    //va a permitir hacer un request que se haga con un Login con un post
+                    req.requestMatchers(HttpMethod.POST, "/login").permitAll();
+                    //tabien se le dice que bloquea el resto de URLs
+                    req.anyRequest().authenticated(); //quiere decir que tiene que estar autenticado para el resto de opciones
+
+                })
                 .build();
 
     }
