@@ -60,13 +60,13 @@ public record DatosListaTopico(
      * aquella marcada como "solución" y devuelve su contenido.
      *
      * @param topico El tópico del cual se quiere extraer la solución.
-     * @return El contenido de la solución, o {@code null} si no existe ninguna.
+     * @return El contenido de la solución, o {@code "No Solucionado"} si no existe ninguna.
      */
     private static String obtenerSolucion(Topico topico) {
         return topico.getRespuestas().stream()
                 .filter(Respuesta::isSolucion)      // Filtra solo las respuestas con esSolucion = true
                 .findFirst()                          // Toma la primera (debería haber solo una)
                 .map(Respuesta::getMensaje)         // Extrae el contenido de la respuesta
-                .orElse(null);                        // Si no hay solución, devuelve null
+                .orElse("No Solucionado");            // ✅ Si no hay solución, devuelve "No Solucionado"
     }
 }

@@ -1,22 +1,30 @@
 package med.voll.ForoHub.controller;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.Valid;
 import med.voll.ForoHub.datos.*;
+import med.voll.ForoHub.exception.GestorDeErrores;
 import med.voll.ForoHub.filtro.FiltroDatosTopico;
 import med.voll.ForoHub.domain.Topico;
+import med.voll.ForoHub.domain.Status;
 import med.voll.ForoHub.repository.TopicoRepository;
 import med.voll.ForoHub.service.TopicoService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 /**
  * Controlador REST para gestionar operaciones CRUD sobre los Tópicos del foro.
@@ -54,6 +62,37 @@ public class TopicoController {
     }
 
     /**
+     * ✅ ESCRIBE LA SOLUCIÓN PARA UN TÓPICO
+     *
+     * Este método mapea DatosSolucionTopico a DatosRespuesta
+     * y llama a escribirRespuesta() del servicio para que se actualice el estado a RESUELTO
+     */
+    @PostMapping("/soluciones")
+    public ResponseEntity<?> escribirSolucion(
+            @RequestBody @Valid DatosSolucionTopico datos) {
+
+        try {
+            DatosRespuesta datosRespuesta = new DatosRespuesta(
+                    datos.mensaje(),
+                    datos.autor(),
+                    datos.solucion()
+            );
+
+            DatosDetalleTopico topicoConSolucion = topicoService.escribirRespuesta(
+                    datos.topicoId(),
+                    datosRespuesta
+            );
+
+            return ResponseEntity.ok(topicoConSolucion);
+        } catch (IllegalArgumentException e) {
+            // ✅ Usa el formato de error definido en GestorDeErrores
+            return ResponseEntity.badRequest().body(
+                    List.of(new GestorDeErrores.DatosErrorValidacion("error", e.getMessage()))
+            );
+        }
+    }
+
+    /**
      * Lista todos los tópicos con paginación y filtros opcionales por nombre de curso y año.
      *
      * - Usa el repositorio directamente porque es una consulta simple.
@@ -72,9 +111,9 @@ public class TopicoController {
     /**
      * Busca tópicos mediante un cuerpo JSON con filtros (nombreCurso y año).
      *
-     * - Valida que los campos obligatorios estén presentes.
-     * - Realiza conversión y búsqueda directa en el repositorio.
-     * - Esta lógica podría moverse a un servicio si crece en complejidad.
+     * ✅ Valida que el campo 'ano' contenga SOLO números
+     * ✅ Devuelve 404 si no se encuentran resultados
+     * ✅ Devuelve 400 si el año es inválido
      */
     @PostMapping("/buscar")
     @Transactional(readOnly = true)
@@ -82,23 +121,57 @@ public class TopicoController {
             @RequestBody @Valid FiltroDatosTopico filtros,
             @PageableDefault(size = 10, sort = "fechaCreacion", direction = Sort.Direction.DESC) Pageable paginacion) {
 
-        // Validaciones manuales (podrían reforzarse con @NotBlank en el DTO)
+        // ✅ VALIDACIÓN 1: Verificar que 'nombreCurso' no esté vacío
         if (filtros.nombreCurso() == null || filtros.nombreCurso().isBlank()) {
-            throw new ResponseStatusException(BAD_REQUEST, "El campo 'nombreCurso' es obligatorio.");
+            throw new ResponseStatusException(
+                    BAD_REQUEST,
+                    "El campo 'nombreCurso' es obligatorio."
+            );
         }
+
+        // ✅ VALIDACIÓN 2: Verificar que 'ano' no esté vacío
         if (filtros.ano() == null || filtros.ano().isBlank()) {
-            throw new ResponseStatusException(BAD_REQUEST, "El campo 'ano' es obligatorio.");
+            throw new ResponseStatusException(
+                    BAD_REQUEST,
+                    "El campo 'ano' es obligatorio."
+            );
         }
 
-        // Convertir año a entero (asumimos que ya fue validado por @Valid en el DTO)
-        Integer ano = Integer.valueOf(filtros.ano().trim());
+        // ✅ VALIDACIÓN 3: Verificar que 'ano' contenga SOLO números
+        String anoStr = filtros.ano().trim();
+        if (!anoStr.matches("\\d+")) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST,
+                    "El campo 'ano' debe contener SOLO números (ej: 2023, 2024)."
+            );
+        }
 
-        // Realizar búsqueda
+        // Convertir año a entero
+        Integer ano;
+        try {
+            ano = Integer.parseInt(anoStr);
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST,
+                    "El campo 'ano' debe contener SOLO números (ej: 2023, 2024)."
+            );
+        }
+
+        // ✅ VALIDACIÓN 4: Realizar búsqueda
         Page<Topico> topicos = topicoRepository.findByCursoNombreAndAno(
                 filtros.nombreCurso().trim(),
                 ano,
                 paginacion
         );
+
+        // ✅ VALIDACIÓN 5: Verificar si hay resultados
+        if (topicos.isEmpty()) {
+            throw new ResponseStatusException(
+                    NOT_FOUND,
+                    "No se encontraron tópicos para el curso '" + filtros.nombreCurso() +
+                            "' en el año " + ano + "."
+            );
+        }
 
         return ResponseEntity.ok(topicos.map(DatosListaTopico::new));
     }
@@ -158,11 +231,61 @@ public class TopicoController {
      * - Consulta directa al repositorio.
      * - Mapeo automático a DTO.
      */
+    // En TopicoController.java
     @GetMapping("/con-solucion")
     @Transactional(readOnly = true)
     public ResponseEntity<Page<DatosListaTopico>> listarTopicosConSolucion(
             @PageableDefault(size = 10, sort = "fechaCreacion", direction = Sort.Direction.DESC) Pageable paginacion) {
-        Page<Topico> topicos = topicoRepository.findAllWithSolucion(paginacion);
+
+        // ✅ Filtrar explícitamente por estado RESUELTO
+        Page<Topico> topicos = topicoRepository.findAllWithSolucion(
+                Status.RESUELTO,  // 👈 ¡Este es el filtro clave!
+                paginacion
+        );
+
         return ResponseEntity.ok(topicos.map(DatosListaTopico::new));
+    }
+    // ✅ MANEJADOR DE EXCEPCIONES PERSONALIZADO
+    // Evita que Spring Security convierta los errores de negocio en 403 Forbidden
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleResponseStatusException(ResponseStatusException ex) {
+        // ✅ CORRECCIÓN PARA SPRING BOOT 3.x: Convertir a HttpStatus para obtener la frase de estado
+        String reasonPhrase = HttpStatus.valueOf(ex.getStatusCode().value()).getReasonPhrase();
+
+        ErrorResponse error = new ErrorResponse(
+                LocalDateTime.now(),
+                ex.getStatusCode().value(),
+                reasonPhrase,
+                ex.getReason(),
+                null
+        );
+        return ResponseEntity.status(ex.getStatusCode()).body(error);
+    }
+
+    /**
+     * Clase de respuesta de error para estandarizar formatos
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class ErrorResponse {
+        private final LocalDateTime timestamp;
+        private final int status;
+        private final String error;
+        private final String message;
+        private final String path;
+
+        public ErrorResponse(LocalDateTime timestamp, int status, String error, String message, String path) {
+            this.timestamp = timestamp;
+            this.status = status;
+            this.error = error;
+            this.message = message;
+            this.path = path;
+        }
+
+        // Getters para serialización JSON
+        public LocalDateTime getTimestamp() { return timestamp; }
+        public int getStatus() { return status; }
+        public String getError() { return error; }
+        public String getMessage() { return message; }
+        public String getPath() { return path; }
     }
 }

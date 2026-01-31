@@ -47,32 +47,8 @@ public record DatosDetalleTopico(
                 topico.getStatus(),
                 topico.getAutor(),
                 topico.getCurso() != null ? topico.getCurso().getNombre() : null,
-                obtenerSolucion(topico)  // Extrae la solución si existe
+                obtenerSolucion(topico)
         );
-    }
-
-    /**
-     * Constructor personalizado para usar en el servicio cuando ya se ha extraído
-     * la solución manualmente (por ejemplo, en {@link TopicoService#obtenerPorIdConSolucion}).
-     */
-    public DatosDetalleTopico(
-            Long id,
-            String titulo,
-            String mensaje,
-            LocalDateTime fechaCreacion,
-            Status status,
-            String autor,
-            String nombreCurso,
-            String solucion
-    ) {
-        this.id = id;
-        this.titulo = titulo;
-        this.mensaje = mensaje;
-        this.fechaCreacion = fechaCreacion;
-        this.status = status;
-        this.autor = autor;
-        this.nombreCurso = nombreCurso;
-        this.solucion = solucion;
     }
 
     /**

@@ -4,7 +4,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 public class GenerarHash {
     public static void main(String[] args) {
-        String contrasenaPlano = "123456";
+        String contrasenaPlano = "123456789";
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         String hashGenerado = encoder.encode(contrasenaPlano);
 

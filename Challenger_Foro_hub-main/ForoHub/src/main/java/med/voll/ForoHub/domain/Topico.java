@@ -44,8 +44,10 @@ public class Topico {
     // Fecha y hora de creación del tópico.
     private LocalDateTime fechaCreacion;
 
-    // Enumeración que representa el estado del tópico (ej. ABIERTO, CERRADO, etc.).
-    @Enumerated(EnumType.STRING) // Almacena el nombre del enum como String en la BD.
+    // ✅ CAMBIO CLAVE: Enumeración que representa el estado del tópico
+    // Almacena el nombre del enum como String en la BD (no como ordinal)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20, updatable = true)  // 👈 ¡Este es el cambio crítico!
     private Status status;
 
     // Nombre del autor del tópico.
@@ -91,10 +93,6 @@ public class Topico {
         if (datos.fechaCreacion() != null) {
             this.fechaCreacion = datos.fechaCreacion();
         }
-        // Nota: la validación de fechaCreacion está duplicada; probablemente sea redundante.
-        if (datos.fechaCreacion() != null) {
-            this.fechaCreacion = datos.fechaCreacion();
-        }
         if (datos.status() != null) {
             this.status = datos.status();
         }
@@ -108,4 +106,18 @@ public class Topico {
         this.activo = activo;
     }
 
+    // ✅ SETTER PERSONALIZADO PARA FORZAR DETECCIÓN DE CAMBIOS EN STATUS
+    // Este setter sobrescribe el generado por Lombok para forzar que Hibernate detecte el cambio
+    public void setStatus(Status status) {
+        this.status = status;
+        System.out.println("⚠️ [Topico.setStatus] Status actualizado a: " + status);
+    }
+
+    // ✅ MÉTODO PARA DEPURACIÓN: Mostrar información del tópico
+    public void debugInfo() {
+        System.out.println("🔍 DEBUG Topico ID " + this.id + ":");
+        System.out.println("   - Status actual: " + this.status);
+        System.out.println("   - Tipo de status: " + (this.status != null ? this.status.getClass().getName() : "null"));
+        System.out.println("   - Status name: " + (this.status != null ? this.status.name() : "null"));
+    }
 }
