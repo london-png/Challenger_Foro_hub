@@ -93,6 +93,22 @@ public class TopicoController {
     }
 
     /**
+     * ✅ MARCA UN TÓPICO COMO RESUELTO (SOLUCIONADO)
+     *
+     * Endpoint dedicado para cambiar el estado de un tópico a RESUELTO
+     * sin necesidad de crear una respuesta.
+     *
+     * @param id ID del tópico a marcar como solucionado
+     * @return Tópico actualizado con estado RESUELTO
+     */
+    @PutMapping("/{id:\\d+}/solucionar")
+    @Transactional
+    public ResponseEntity<DatosDetalleTopico> marcarComoSolucionado(@PathVariable Long id) {
+        DatosDetalleTopico topicoActualizado = topicoService.marcarComoSolucionado(id);
+        return ResponseEntity.ok(topicoActualizado);
+    }
+
+    /**
      * Lista todos los tópicos con paginación y filtros opcionales por nombre de curso y año.
      *
      * - Usa el repositorio directamente porque es una consulta simple.
@@ -245,6 +261,7 @@ public class TopicoController {
 
         return ResponseEntity.ok(topicos.map(DatosListaTopico::new));
     }
+
     // ✅ MANEJADOR DE EXCEPCIONES PERSONALIZADO
     // Evita que Spring Security convierta los errores de negocio en 403 Forbidden
     @ExceptionHandler(ResponseStatusException.class)

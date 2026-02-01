@@ -13,23 +13,23 @@ import java.util.Arrays;
 public class TopicoRules {
 
     /**
-     * Regla 3: Un tópico solo puede tener una solución
+     * Regla 1: Un tópico solo puede tener una solución
      */
     public void validarUnicaSolucion(Topico topico) {
         long cantidadSoluciones = topico.getRespuestas().stream()
                 .filter(Respuesta::isSolucion)
                 .count();
 
-        if (cantidadSoluciones > 0) {
+        if (cantidadSoluciones >= 1) {
             throw new ResponseStatusException(
                     BAD_REQUEST,
-                    "Este tópico ya tiene una solución marcada. Solo se permite una solución por tópico."
+                    "El tópico ID " + topico.getId() + " ya cuenta con una solución dada y está en estado RESUELTO. No se permite marcar múltiples soluciones para el mismo tópico."
             );
         }
     }
 
     /**
-     * Regla 1: El autor del tópico no puede marcar su propia respuesta como solución
+     * Regla 2: El autor del tópico no puede marcar su propia respuesta como solución
      */
     public void validarAutorSolucion(Topico topico, String autorRespuesta) {
         if (topico.getAutor().equalsIgnoreCase(autorRespuesta)) {
@@ -41,15 +41,10 @@ public class TopicoRules {
     }
 
     /**
-     * Regla 4: Validación de calidad del mensaje y título
-     *
-     * Validaciones:
-     * - El mensaje debe tener al menos 20 caracteres
-     * - El título debe tener al menos 10 caracteres
-     * - El título no debe ser genérico (ayuda, problema, error, etc.)
+     * Regla 3: Validación de calidad del mensaje y título
      */
     public void validarCalidadMensaje(String mensaje, String titulo) {
-        // ✅ Validar longitud mínima del mensaje
+        // Validar longitud mínima del mensaje
         if (mensaje == null || mensaje.length() < 20) {
             throw new ResponseStatusException(
                     BAD_REQUEST,
@@ -57,13 +52,40 @@ public class TopicoRules {
             );
         }
 
-        // ✅ Validar longitud mínima del título (si se proporciona)
+        // Validar longitud mínima del título (si se proporciona)
         if (titulo != null && titulo.length() < 10) {
             throw new ResponseStatusException(
                     BAD_REQUEST,
-                    "El título debe tener al menos 10 caracteres."  // 👈 Mensaje que verás en Insomnia
+                    "El título debe tener al menos 10 caracteres."
             );
         }
-        
     }
+    /**
+     * Valida que un tópico solucionado no permita más respuestas
+     *
+     * @param topico El tópico al que se quiere agregar una respuesta
+     * @throws ResponseStatusException si el tópico ya está solucionado
+     */
+    public void validarTopicoNoSolucionado(Topico topico) {
+        // Verificar si el tópico ya está en estado RESUELTO
+        if (topico.getStatus() == med.voll.ForoHub.domain.Status.RESUELTO) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST,
+                    "El tópico ID " + topico.getId() + " ya está solucionado y no puede recibir más respuestas. " +
+                            "Solo se permite una solución por tópico."
+            );
+        }
+    }
+
+    /**
+     * Verifica si un tópico ya tiene una respuesta marcada como solución
+     *
+     * @param topico El tópico a verificar
+     * @return true si el tópico ya tiene una solución, false en caso contrario
+     */
+    public boolean tieneSolucion(Topico topico) {
+        return topico.getRespuestas().stream()
+                .anyMatch(respuesta -> respuesta.isSolucion());
+    }
+
 }

@@ -1,7 +1,5 @@
 package med.voll.ForoHub.infra.security;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,8 +13,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import java.io.IOException;
 
 @Configuration
 @EnableWebSecurity //habilita la seguridad
@@ -42,16 +38,6 @@ public class SecurityConfigurations {
                 })
                 //indica que ejecute primero nuestro filtro y le luego le indicamos el siguiente
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class) //UsernamePasswordAuthenticationFilter es el filtro de Spring Boot
-
-                // 👇 CONFIGURACIÓN PARA DEVOLVER 401 EN LUGAR DE 403 CUANDO EL TOKEN ES INVÁLIDO
-                .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.sendError(
-                                    HttpServletResponse.SC_UNAUTHORIZED,
-                                    "Token inválido o expirado. Por favor, inicia sesión nuevamente."
-                            );
-                        })
-                )
 
                 .build();
     }

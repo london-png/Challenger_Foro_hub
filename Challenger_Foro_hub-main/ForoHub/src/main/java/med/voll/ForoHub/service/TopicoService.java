@@ -19,6 +19,7 @@ import jakarta.persistence.PersistenceContext;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -117,6 +118,9 @@ public class TopicoService {
         Topico topico = topicoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Tópico no encontrado."));
 
+        //FORZAR LA CARGA DE LAS RESPUESTAS
+        topico.getRespuestas().size();
+
         return toDatosDetalleTopico(topico);
     }
 
@@ -166,7 +170,7 @@ public class TopicoService {
      * ⚠️ Reglas de negocio críticas:
      * - Si se marca como solución ("solucion": "True"), los campos 'mensaje' y 'autor' son OBLIGATORIOS
      * - Si falta alguno de estos campos, se lanza excepción 400 Bad Request
-     * - Al marcar como solución, el estado del tópico cambia a RESUELTO
+     * - ✅ Al marcar como solución, el estado del tópico CAMBIA AUTOMÁTICAMENTE a RESUELTO
      * - ✅ Un tópico solo puede tener una solución
      * - ✅ El autor del tópico no puede marcar su propia respuesta como solución
      *
@@ -176,7 +180,7 @@ public class TopicoService {
      */
     @Transactional
     public DatosDetalleTopico escribirRespuesta(Long topicoId, DatosRespuesta datos) {
-        // ✅ VALIDACIÓN DE REGLA DE NEGOCIO 1: Si es solución, mensaje es obligatorio
+        // ✅ VALIDACIÓN 1: Si es solución, mensaje es obligatorio
         if ("true".equalsIgnoreCase(datos.solucion()) &&
                 (datos.mensaje() == null || datos.mensaje().isBlank())) {
             throw new ResponseStatusException(
@@ -185,7 +189,7 @@ public class TopicoService {
             );
         }
 
-        // ✅ VALIDACIÓN DE REGLA DE NEGOCIO 2: Si es solución, autor es obligatorio
+        // ✅ VALIDACIÓN 2: Si es solución, autor es obligatorio
         if ("true".equalsIgnoreCase(datos.solucion()) &&
                 (datos.autor() == null || datos.autor().isBlank())) {
             throw new ResponseStatusException(
@@ -194,58 +198,105 @@ public class TopicoService {
             );
         }
 
-        // Buscar el tópico
+        // ✅ BUSCAR EL TÓPICO
         Topico topico = topicoRepository.findById(topicoId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Tópico no encontrado."));
 
         // ✅ APLICAR REGLAS DE NEGOCIO: Validar calidad del mensaje
         topicoRules.validarCalidadMensaje(datos.mensaje(), null);
 
-        // ✅ APLICAR REGLAS DE NEGOCIO: Validar que el autor no sea el mismo del tópico
-        if ("true".equalsIgnoreCase(datos.solucion())) {
+        // ✅ CONVERTIR A BOOLEANO
+        boolean esSolucion = "true".equalsIgnoreCase(datos.solucion());
+
+        // ✅ APLICAR REGLAS DE NEGOCIO: Validar autor si es solución
+        if (esSolucion) {
             topicoRules.validarAutorSolucion(topico, datos.autor());
+            topicoRules.validarUnicaSolucion(topico);
         }
 
-        // ✅ LOG: Mostrar estado actual antes del cambio
-        System.out.println("🔍 [ANTES] Estado actual del tópico ID " + topicoId + ": " + topico.getStatus());
-        System.out.println("🔍 [ANTES] Estado en BD: " + topicoRepository.findById(topicoId).get().getStatus());
-
-        // Crear la nueva respuesta
+        // ✅ CREAR LA RESPUESTA
         Respuesta respuesta = new Respuesta();
         respuesta.setMensaje(datos.mensaje());
         respuesta.setAutor(datos.autor());
         respuesta.setFechaCreacion(LocalDateTime.now());
         respuesta.setTopico(topico);
-        boolean esSolucion = "true".equalsIgnoreCase(datos.solucion());
         respuesta.setSolucion(esSolucion);
 
-        // ✅ REGLA DE NEGOCIO 3: Si es solución, actualizar estado del tópico a RESUELTO
+        // ✅ AGREGAR LA RESPUESTA AL TÓPICO
+        topico.getRespuestas().add(respuesta);
+
+        // ✅ SI ES SOLUCIÓN, ACTUALIZAR ESTADO A RESUELTO
         if (esSolucion) {
-            // ✅ APLICAR REGLAS DE NEGOCIO: Validar que el tópico no tenga otra solución
-            topicoRules.validarUnicaSolucion(topico);
-
-            topico.setStatus(Status.RESUELTO);  // 👈 Usa el setter que forza la detección de cambios
-            System.out.println("✅ [CAMBIO] Estado del tópico ID " + topicoId + " CAMBIADO a: RESUELTO");
-
-            // ✅ FORZAR LA DETECCIÓN DE CAMBIOS EN EL ESTADO
-            entityManager.flush();
-
-            // ✅ GUARDAR EL ESTADO ANTES DE AGREGAR LA RESPUESTA
-            topicoRepository.saveAndFlush(topico);
+            topico.setStatus(Status.RESUELTO);
+            System.out.println("✅ [AUTOMÁTICO] Estado del tópico ID " + topicoId + " CAMBIADO a: RESUELTO");
         }
 
-        // Agregar la respuesta al tópico
-        topico.getRespuestas().add(respuesta);
+        // ✅ GUARDAR Y FLUSH - PERSISTENCIA GARANTIZADA
+        topicoRepository.saveAndFlush(topico);
+
+        // ✅ LOG: Confirmar estado final
+        System.out.println("💾 [FINAL] Tópico ID " + topicoId + " guardado con estado: " + topico.getStatus());
+
+        // ✅ DEVOLVER EL TÓPICO CON SU INFORMACIÓN ACTUALIZADA
+        return obtenerPorIdConSolucion(topicoId);
+    }
+
+    /**
+     * ✅ MARCA UN TÓPICO COMO RESUELTO (SOLUCIONADO)
+     *
+     * Método dedicado para cambiar el estado de un tópico a RESUELTO
+     * sin necesidad de crear una respuesta.
+     *
+     * ⚠️ Reglas de negocio:
+     * - El tópico debe existir
+     * - Solo se puede marcar como RESUELTO si está ABIERTO
+     * - ✅ NO se verifica si ya hay una solución (para permitir actualización manual)
+     *
+     * @param id ID del tópico a marcar como solucionado
+     * @return {@link DatosDetalleTopico} con la información actualizada del tópico
+     */
+    @Transactional
+    public DatosDetalleTopico marcarComoSolucionado(Long id) {
+        // ✅ VALIDACIÓN 1: Verificar que el ID sea válido
+        if (id == null || id <= 0) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST,
+                    "El ID del tópico es obligatorio y debe ser un número positivo."
+            );
+        }
+
+        // ✅ VALIDACIÓN 2: Buscar el tópico
+        Topico topico = topicoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        NOT_FOUND,
+                        "Tópico no encontrado con ID: " + id
+                ));
+
+        // ✅ VALIDACIÓN 3: Verificar si ya está resuelto
+        if (topico.getStatus() == Status.RESUELTO) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST,
+                    "El tópico ya está marcado como RESUELTO."
+            );
+        }
+
+        // ✅ LOG: Mostrar estado actual antes del cambio
+        System.out.println("🔍 [ANTES] Estado actual del tópico ID " + id + ": " + topico.getStatus());
+        System.out.println("🔍 [ANTES] Estado en BD: " + topicoRepository.findById(id).get().getStatus());
+
+        // ✅ CAMBIAR EL ESTADO A RESUELTO
+        topico.setStatus(Status.RESUELTO);
 
         // ✅ GUARDAR Y FLUSH PARA ASEGURAR QUE SE PERSISTE
         topicoRepository.saveAndFlush(topico);
 
         // ✅ LOG: Confirmar que se guardó
-        System.out.println("💾 [DESPUÉS] Tópico ID " + topicoId + " GUARDADO en base de datos con estado: " + topico.getStatus());
-        System.out.println("💾 [DESPUÉS] Estado en BD: " + topicoRepository.findById(topicoId).get().getStatus());
+        System.out.println("✅ [CAMBIO] Estado del tópico ID " + id + " CAMBIADO a: RESUELTO");
+        System.out.println("💾 [DESPUÉS] Tópico ID " + id + " GUARDADO en base de datos con estado: " + topico.getStatus());
+        System.out.println("💾 [DESPUÉS] Estado en BD: " + topicoRepository.findById(id).get().getStatus());
 
-        // Devolver el tópico con su solución actualizada
-        return obtenerPorIdConSolucion(topicoId);
+        // ✅ DEVOLVER EL TÓPICO CON SU INFORMACIÓN ACTUALIZADA
+        return obtenerPorIdConSolucion(id);
     }
 
     /**

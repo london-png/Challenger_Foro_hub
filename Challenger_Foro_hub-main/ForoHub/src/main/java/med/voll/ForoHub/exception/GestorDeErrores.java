@@ -7,6 +7,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.LocalDateTime;
+
 /**
  * Clase controladora global de excepciones para manejar errores comunes en la API REST.
  * Esta clase intercepta excepciones específicas y devuelve respuestas HTTP adecuadas.
@@ -54,4 +56,12 @@ public class GestorDeErrores {
             this(error.getField(), error.getDefaultMessage());
         }
     }
+    public record ErrorResponse(
+            LocalDateTime timestamp,
+            int status,
+            String error,
+            String message,
+            String path
+    ) {}
+
 }
