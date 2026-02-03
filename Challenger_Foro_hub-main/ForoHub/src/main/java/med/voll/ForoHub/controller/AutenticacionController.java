@@ -1,5 +1,6 @@
 package med.voll.ForoHub.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import med.voll.ForoHub.domain.usuario.DatosAutenticacion;
 import med.voll.ForoHub.domain.usuario.Usuario;
@@ -16,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/login") // asignamos la ruta donde va a estar atendiendo ese controler
-
+@SecurityRequirement(name = "bearer-key")//se debe de colocar en cada uno debe de ir antes de la clase
 public class AutenticacionController {
 
     @Autowired // sea inyectado con inyeccion de dependencias

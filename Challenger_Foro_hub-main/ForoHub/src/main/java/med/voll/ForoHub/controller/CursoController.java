@@ -2,6 +2,7 @@
 package med.voll.ForoHub.controller;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import med.voll.ForoHub.datos.DatosRegistroCurso;
 import med.voll.ForoHub.domain.Curso;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/cursos")
+@SecurityRequirement(name = "bearer-key")//se debe de colocar en cada uno debe de ir antes de la clase
 public class CursoController {
 
     @Autowired

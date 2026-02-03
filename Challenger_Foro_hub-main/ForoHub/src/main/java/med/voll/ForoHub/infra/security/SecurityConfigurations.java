@@ -31,7 +31,11 @@ public class SecurityConfigurations {
                 //indicamos que URls estan disponibles y cuales no
                 .authorizeHttpRequests(req -> {
                     //va a permitir hacer un request que se haga con un Login con un post
-                    req.requestMatchers(HttpMethod.POST, "/login").permitAll();
+                    req.requestMatchers(HttpMethod.POST, "/login").permitAll()
+
+                            //liberar las urls
+                            .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll();//liberar urls
+
                     //tabien se le dice que bloquea el resto de URLs
                     req.anyRequest().authenticated(); //quiere decir que tiene que estar autenticado para el resto de opciones
 

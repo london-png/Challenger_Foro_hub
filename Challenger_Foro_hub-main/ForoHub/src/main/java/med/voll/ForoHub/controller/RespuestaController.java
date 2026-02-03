@@ -1,5 +1,6 @@
 package med.voll.ForoHub.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import med.voll.ForoHub.datos.DatosDetalleRespuesta;
 import med.voll.ForoHub.datos.DatosRespuesta;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/topicos")
+@SecurityRequirement(name = "bearer-key")//se debe de colocar en cada uno debe de ir antes de la clase
 public class RespuestaController {
 
     private final TopicoRepository topicoRepository;

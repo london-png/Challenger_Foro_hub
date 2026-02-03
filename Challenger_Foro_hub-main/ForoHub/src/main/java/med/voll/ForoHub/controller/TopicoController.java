@@ -1,6 +1,7 @@
 package med.voll.ForoHub.controller;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import med.voll.ForoHub.datos.*;
 import med.voll.ForoHub.exception.GestorDeErrores;
@@ -37,6 +38,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
  */
 @RestController
 @RequestMapping("/topicos")
+@SecurityRequirement(name = "bearer-key")//se debe de colocar en cada uno debe de ir antes de la clase
+
 public class TopicoController {
 
     // === Inyección de dependencias ===
