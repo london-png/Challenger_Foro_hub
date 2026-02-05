@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -44,7 +43,6 @@ public class CursoController {
 
         // Construir URI de recurso creado
         var uri = uriBuilder.path("/cursos/{id}").buildAndExpand(saved.getId()).toUri();
-
         return ResponseEntity.created(uri).body(saved);
     }
 
@@ -53,7 +51,7 @@ public class CursoController {
         return ResponseEntity.ok(cursoRepository.findAll());
     }
 
-    // ✅ Manejador de excepciones personalizado
+    // Manejador de excepciones
     @ExceptionHandler(CursoDuplicadoException.class)
     public ResponseEntity<ErrorResponse> handleCursoDuplicado(CursoDuplicadoException ex) {
         ErrorResponse error = new ErrorResponse(
@@ -66,14 +64,14 @@ public class CursoController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    // ✅ Clase de excepción personalizada
+    // clase de excepción personalizada
     public static class CursoDuplicadoException extends RuntimeException {
         public CursoDuplicadoException(String message) {
             super(message);
         }
     }
 
-    // ✅ Clase de respuesta de error
+    // Clase de respuesta de error
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class ErrorResponse {
         private final LocalDateTime timestamp;

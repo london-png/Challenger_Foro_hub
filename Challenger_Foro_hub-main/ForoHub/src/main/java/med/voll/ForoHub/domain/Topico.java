@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import med.voll.ForoHub.datos.DatosActualizacionTopico;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,10 +43,10 @@ public class Topico {
     // Fecha y hora de creación del tópico.
     private LocalDateTime fechaCreacion;
 
-    // ✅ CAMBIO CLAVE: Enumeración que representa el estado del tópico
+    // CAMBIO CLAVE: Enumeración que representa el estado del tópico
     // Almacena el nombre del enum como String en la BD (no como ordinal)
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20, updatable = true)  // 👈 ¡Este es el cambio crítico!
+    @Column(name = "status", nullable = false, length = 20, updatable = true)
     private Status status;
 
     // Nombre del autor del tópico.
@@ -101,21 +100,21 @@ public class Topico {
         }
     }
 
-    // Método setter para el campo 'activo', usado en lógica de eliminación suave.
+    // Método setter para el campo 'activo', usado en lógica de eliminación.
     public void setActivo(Boolean activo) {
         this.activo = activo;
     }
 
-    // ✅ SETTER PERSONALIZADO PARA FORZAR DETECCIÓN DE CAMBIOS EN STATUS
+    // SETTER PERSONALIZADO PARA FORZAR DETECCIÓN DE CAMBIOS EN STATUS
     // Este setter sobrescribe el generado por Lombok para forzar que Hibernate detecte el cambio
     public void setStatus(Status status) {
         this.status = status;
-        System.out.println("⚠️ [Topico.setStatus] Status actualizado a: " + status);
+        System.out.println("[Topico.setStatus] Status actualizado a: " + status);
     }
 
-    // ✅ MÉTODO PARA DEPURACIÓN: Mostrar información del tópico
+    // MÉTODO PARA DEPURACIÓN: Mostrar información del tópico
     public void debugInfo() {
-        System.out.println("🔍 DEBUG Topico ID " + this.id + ":");
+        System.out.println("    DEBUG Topico ID " + this.id + ":");
         System.out.println("   - Status actual: " + this.status);
         System.out.println("   - Tipo de status: " + (this.status != null ? this.status.getClass().getName() : "null"));
         System.out.println("   - Status name: " + (this.status != null ? this.status.name() : "null"));

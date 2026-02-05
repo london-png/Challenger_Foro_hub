@@ -10,7 +10,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
 
 @Component
@@ -26,23 +25,23 @@ public class SecurityFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 🔍 LOG 1: Ver qué llega en el header Authorization
+        // LOG 1: Ver qué llega en el header Authorization
         var authorizationHeader = request.getHeader("Authorization");
-        System.out.println("🔍 Header Authorization recibido: " + authorizationHeader);
+        System.out.println("Header Authorization recibido: " + authorizationHeader);
 
-        // 🔍 LOG 2: Ver la URL de la petición
-        System.out.println("🔍 URL de la petición: " + request.getMethod() + " " + request.getRequestURI());
+        // LOG 2: Ver la URL de la petición
+        System.out.println("URL de la petición: " + request.getMethod() + " " + request.getRequestURI());
 
         // Recuperar token
         var tokenJWT = recuperarToken(request);
 
-        // 🔍 LOG 3: Ver el token extraído
+        // LOG 3: Ver el token extraído
         if (tokenJWT != null) {
-            System.out.println("🔍 Token extraído (primeros 50 chars): " +
+            System.out.println("Token extraído (primeros 50 chars): " +
                     (tokenJWT.length() > 50 ? tokenJWT.substring(0, 50) + "..." : tokenJWT));
-            System.out.println("🔍 Longitud del token: " + tokenJWT.length() + " caracteres");
+            System.out.println("Longitud del token: " + tokenJWT.length() + " caracteres");
         } else {
-            System.out.println("⚠️ Token es NULL o vacío");
+            System.out.println("Token es NULL o vacío");
         }
 
         if (tokenJWT == null) {
@@ -55,7 +54,7 @@ public class SecurityFilter extends OncePerRequestFilter {
             var usuario = usuarioRepository.findByLogin(subject);
 
             if (usuario == null) {
-                System.err.println("❌ Usuario no encontrado: " + subject);
+                System.err.println("Usuario no encontrado: " + subject);
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Usuario no encontrado");
                 return;
             }
@@ -66,10 +65,10 @@ public class SecurityFilter extends OncePerRequestFilter {
                     usuario.getAuthorities()
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            System.out.println("✅ Usuario autenticado: " + subject);
+            System.out.println("Usuario autenticado: " + subject);
 
         } catch (Exception e) {
-            System.err.println("❌ ERROR AL VALIDAR TOKEN: " + e.getMessage());
+            System.err.println("ERROR AL VALIDAR TOKEN: " + e.getMessage());
             e.printStackTrace();
             response.sendError(
                     HttpServletResponse.SC_UNAUTHORIZED,

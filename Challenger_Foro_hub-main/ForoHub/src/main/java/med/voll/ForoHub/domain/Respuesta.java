@@ -16,15 +16,13 @@ public class Respuesta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String mensaje;
     private LocalDateTime fechaCreacion;
     private String autor;
     private boolean solucion = false; // Por defecto no es solución
-
     private Boolean activo = true;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY) // carga soo cuando se accede
     @JoinColumn(name = "topico_id", nullable = false)
     private Topico topico;
 

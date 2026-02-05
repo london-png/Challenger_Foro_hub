@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 
+// crear la doumentacion para mostrarla en Swagger
 public class SpringDocConfiguration {
     @Bean
     public OpenAPI customOpenAPI() {

@@ -20,16 +20,18 @@ public class SecurityConfigurations {
 
     @Autowired
     private SecurityFilter securityFilter;
-    //crear un metodo que sea capas de sacar las configuraciones de Spring Security
 
+    //crear un metodo que sea capas de sacar las configuraciones de Spring Security
     @Bean //indica que esta clase puede ser cargada para que posteriormente se pueda usar
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity.csrf(csrf -> csrf.disable()) //deshabilitamos la seguridad por que usamos un sistema stateless y ya estamos protegidos
 
                 //debemos convertir el sistema stateful en stateless, tenemos que deshabilitar esos formularios de loging
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 //indicamos que URls estan disponibles y cuales no
                 .authorizeHttpRequests(req -> {
+
                     //va a permitir hacer un request que se haga con un Login con un post
                     req.requestMatchers(HttpMethod.POST, "/login").permitAll()
 
@@ -42,7 +44,6 @@ public class SecurityConfigurations {
                 })
                 //indica que ejecute primero nuestro filtro y le luego le indicamos el siguiente
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class) //UsernamePasswordAuthenticationFilter es el filtro de Spring Boot
-
                 .build();
     }
 

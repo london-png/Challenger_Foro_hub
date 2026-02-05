@@ -16,21 +16,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/login") // asignamos la ruta donde va a estar atendiendo ese controler
-@SecurityRequirement(name = "bearer-key")//se debe de colocar en cada uno debe de ir antes de la clase
+@RequestMapping("/login") // asignamos la ruta donde va a estar atendiendo ese controlADOR
+@SecurityRequirement(name = "bearer-key")//se debe de colocar en cada clase debe de ir antes de la clase
 public class AutenticacionController {
 
-    @Autowired // sea inyectado con inyeccion de dependencias
+    @Autowired // para sea inyectado con inyeccion de dependencias
     private TokenService tokenService;
 
-    //creamos un metodo donde recivimos todos los datos que nos va a enviar nuestro frontend
+    //creamos un metodo donde recibimos todos los datos que nos va a enviar de nuestro frontend
     @Autowired
     private AuthenticationManager authenticationManager;
 
     @PostMapping
     public ResponseEntity iniciarSecion(@RequestBody @Valid DatosAutenticacion datos) {
-
-
         var autenticationToken = new UsernamePasswordAuthenticationToken(datos.login(), datos.contrasena());
         var autenticacion = authenticationManager.authenticate(autenticationToken);
 

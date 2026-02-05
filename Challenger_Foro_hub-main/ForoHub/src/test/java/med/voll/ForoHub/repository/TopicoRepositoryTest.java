@@ -11,9 +11,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
-
 import java.time.LocalDateTime;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
@@ -27,7 +25,7 @@ class TopicoRepositoryTest {
     @Autowired
     private CursoRepository cursoRepository;
 
-    // === PRUEBA 1: existsByTituloAndMensaje ===
+    // PRUEBA 1: existsByTituloAndMensaje
     @Test
     @DisplayName("Debe retornar true cuando existe un tópico con el mismo título y mensaje")
     void existsByTituloAndMensaje_WhenExists_ReturnsTrue() {
@@ -65,7 +63,7 @@ class TopicoRepositoryTest {
         assertFalse(existe);
     }
 
-    // === PRUEBA 2: findByCursoNombreAndAno ===
+    // PRUEBA 2: findByCursoNombreAndAno
     @Test
     @DisplayName("Debe filtrar tópicos por nombre de curso (insensible a mayúsculas) y año")
     void findByCursoNombreAndAno_WithValidFilters_ReturnsMatchingTopics() {

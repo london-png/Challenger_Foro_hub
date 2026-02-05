@@ -12,22 +12,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Controlador REST para gestionar operaciones CRUD sobre las Respuestas.
- *
- * ✅ Responsabilidad: Gestionar respuestas asociadas a tópicos.
- * ❌ No maneja la lógica de "ver tópico con solución" → eso pertenece a TopicoController.
- */
+//Controlador REST para gestionar operaciones CRUD sobre las Respuestas.
+//Responsabilidad: Gestionar respuestas asociadas a tópicos.
+//maneja la lógica de "ver tópico con solución"  eso pertenece a TopicoController.
+
 @RestController
 @RequestMapping("/topicos")
 @SecurityRequirement(name = "bearer-key")//se debe de colocar en cada uno debe de ir antes de la clase
 public class RespuestaController {
 
+    //inyeccion de dependencias
     private final TopicoRepository topicoRepository;
     private final RespuestaRepository respuestaRepository;
 
@@ -36,29 +34,27 @@ public class RespuestaController {
         this.respuestaRepository = respuestaRepository;
     }
 
-    /**
-     * Agrega una nueva respuesta a un tópico específico.
-     *
-     * @param idTopico ID del tópico al cual se añade la respuesta.
-     * @param datos DTO con los datos de la respuesta.
-     * @return ResponseEntity con la respuesta creada y estado 201 Created.
-     */
+     //Agrega una nueva respuesta a un tópico específico.
+     //param idTopico ID del tópico al cual se añade la respuesta.
+     //@param datos DTO con los datos de la respuesta.
+     //@return ResponseEntity con la respuesta creada y estado 201 Created.
+
     @PostMapping("/{idTopico}/respuestas")
     public ResponseEntity<DatosDetalleRespuesta> agregarRespuesta(
-            @PathVariable Long idTopico,
+            @PathVariable Long idTopico, //xtraer valores de la URL (ruta) y mapearlos a parámetros del método del controlador
             @RequestBody @Valid DatosRespuesta datos) {
 
         Topico topico = topicoRepository.findById(idTopico)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tópico no encontrado"));
 
-        // === Validar que 'solucion' sea "true" o "false" (ignorando mayúsculas) ===
+        //Validar que 'solucion' sea "true" o "false" (ignorando mayúsculas) ===
         String solucionStr = datos.solucion().trim();
         if (!solucionStr.equalsIgnoreCase("true") && !solucionStr.equalsIgnoreCase("false")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El campo 'solucion' solo puede ser 'true' o 'false'.");
         }
         Boolean solucion = Boolean.parseBoolean(solucionStr);
 
-        // === Validar que no exista una respuesta duplicada ===
+        //=Validar que no exista una respuesta duplicada ===
         if (respuestaRepository.existsByMensajeAndAutorAndTopico(datos.mensaje(), datos.autor(), topico)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe una respuesta idéntica para este tópico.");
         }
@@ -79,12 +75,10 @@ public class RespuestaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(convertirADto(savedRespuesta));
     }
 
-    /**
-     * Obtiene todas las respuestas asociadas a un tópico.
-     *
-     * @param idTopico ID del tópico.
-     * @return ResponseEntity con la lista de respuestas.
-     */
+     //Obtiene todas las respuestas asociadas a un tópico.
+     //@param idTopico ID del tópico.
+     //@return ResponseEntity con la lista de respuestas.
+
     @GetMapping("/{idTopico}/respuestas")
     public ResponseEntity<List<DatosDetalleRespuesta>> obtenerRespuestas(@PathVariable Long idTopico) {
         Topico topico = topicoRepository.findById(idTopico)
@@ -99,9 +93,8 @@ public class RespuestaController {
         return ResponseEntity.ok(dtos);
     }
 
-    /**
-     * Convierte una entidad {@link Respuesta} en un DTO de salida {@link DatosDetalleRespuesta}.
-     */
+    //Convierte una entidad {@link Respuesta} en un DTO de salida {@link DatosDetalleRespuesta}.
+
     private DatosDetalleRespuesta convertirADto(Respuesta respuesta) {
         return new DatosDetalleRespuesta(
                 respuesta.getId(),
@@ -112,7 +105,4 @@ public class RespuestaController {
                 respuesta.getTopico().getId()
         );
     }
-
-    // ⚠️ El método "/soluciones/{topicoId}" ha sido eliminado para evitar conflicto con TopicoController.
-    // ✅ La funcionalidad de "ver tópico con solución" ahora está en TopicoController.
 }

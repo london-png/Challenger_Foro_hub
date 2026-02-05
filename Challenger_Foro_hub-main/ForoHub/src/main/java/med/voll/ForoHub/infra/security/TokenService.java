@@ -8,12 +8,9 @@ import jakarta.annotation.PostConstruct;
 import med.voll.ForoHub.domain.usuario.Usuario;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.util.Date;
 
 @Service
 public class TokenService {
@@ -22,11 +19,13 @@ public class TokenService {
     @Value("${api.security.token.secret}")
     private String secret;
 
-    // ← Agrega el método justo después de la declaración de la variable secret
+    // se crea para Confirmar que la clave secreta se cargó correctamente
+    // Muestra el valor y longitud de la clave (útil en desarrollo)
+    // Permite detectar problemas temprano (clave nula, demasiado corta, etc.)
     @PostConstruct
     public void init() {
-        System.out.println("🔑 TokenService - Clave cargada: [" + secret + "]");
-        System.out.println("🔑 Longitud de la clave: " + (secret != null ? secret.length() : 0) + " caracteres");
+        System.out.println("TokenService - Clave cargada: [" + secret + "]");
+        System.out.println("Longitud de la clave: " + (secret != null ? secret.length() : 0) + " caracteres");
     }
 
 
@@ -37,7 +36,7 @@ public class TokenService {
             return JWT.create() //sirve para crear
                     .withIssuer("forohub voll.med") //dice cual es el servidor que esta firmando ese token
                     .withSubject(usuario.getLogin()) // el usuario de quien va a recibir el token
-                    .withExpiresAt(fechaExpiracion())
+                    .withExpiresAt(fechaExpiracion()) // fecha de expitacion del tokrn
                     .sign(algoritmo); // sirve para pasar el algoritmo
         } catch (JWTCreationException exception) {
             throw new RuntimeException("error al generar el token JWT", exception);
@@ -65,7 +64,7 @@ public class TokenService {
                     .verify(tokenJWT)
                     .getSubject();// obtiene subject si es el correcto
         } catch (JWTVerificationException exception) {
-            System.err.println("❌ ERROR DETALLADO AL VALIDAR TOKEN:");//*******
+            System.err.println("ERROR DETALLADO AL VALIDAR TOKEN:");//*******
             System.err.println("   - Mensaje: " + exception.getMessage());//*****
             System.err.println("   - Causa: " + (exception.getCause() != null ? exception.getCause().getMessage() : "N/A"));//******
             throw new RuntimeException("Token JWT invalido o expirado!");

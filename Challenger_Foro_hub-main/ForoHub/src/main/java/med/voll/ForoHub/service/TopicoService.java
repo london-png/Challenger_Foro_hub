@@ -16,37 +16,31 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
-
 import static org.springframework.http.HttpStatus.*;
 
-/**
- * Servicio encargado de la lógica de negocio relacionada con los Tópicos.
- *
- * Responsabilidades:
- * - Validar datos de entrada (como cursoId).
- * - Prevenir duplicados.
- * - Gestionar la creación, actualización y eliminación lógica de tópicos.
- * - Convertir entidades a DTOs de salida.
- * - Obtener tópicos con su solución asociada.
- * - ✅ Validar reglas de negocio al escribir soluciones (mensaje y autor obligatorios)
- * - ✅ Actualizar estado del tópico a RESUELTO al escribir una solución
- * - ✅ Aplicar reglas de negocio mediante TopicoRules
- *
- * ✅ El controlador solo orquesta; toda la lógica compleja vive aquí.
- */
+
+ // Servicio encargado de la lógica de negocio relacionada con los Tópicos.
+ // Responsabilidades:
+ // Validar datos de entrada (como cursoId).
+ // Prevenir duplicados.
+ // Gestionar la creación, actualización y eliminación lógica de tópicos.
+ // Convertir entidades a DTOs de salida.
+ // Obtener tópicos con su solución asociada.
+ // Validar reglas de negocio al escribir soluciones (mensaje y autor obligatorios)
+ // Aplicar reglas de negocio mediante TopicoRules
+ // El controlador solo orquesta; toda la lógica compleja vive aquí.
+
 @Service
 public class TopicoService {
 
-    // === Inyección de dependencias ===
+    // Inyección de dependencias
     private final TopicoRepository topicoRepository;
     private final CursoRepository cursoRepository;
-    private final TopicoRules topicoRules; // 👈 INYECCIÓN DE REGLAS DE NEGOCIO
+    private final TopicoRules topicoRules; // INYECCIÓN DE REGLAS DE NEGOCIO
 
-    // ✅ INYECCIÓN DE ENTITY MANAGER PARA FORZAR DETECCIÓN DE CAMBIOS
+    // INYECCIÓN DE ENTITY MANAGER PARA FORZAR DETECCIÓN DE CAMBIOS
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -57,15 +51,14 @@ public class TopicoService {
         this.topicoRules = topicoRules;
     }
 
-    /**
-     * Registra un nuevo tópico en el sistema.
-     *
-     * @param datos DTO con los datos del tópico a crear.
-     * @return {@link DatosDetalleTopico} con la información completa del tópico creado.
-     */
+     // Registra un nuevo tópico en el sistema.
+     // @param datos DTO con los datos del tópico a crear.
+     // return {@link DatosDetalleTopico} con la información completa del tópico creado.
+
     @Transactional
     public DatosDetalleTopico registrar(DatosRegistroTopico datos) {
-        // ✅ APLICAR REGLAS DE NEGOCIO: Validación de calidad del mensaje
+
+        // APLICAR REGLAS DE NEGOCIO: Validación de calidad del mensaje
         topicoRules.validarCalidadMensaje(datos.mensaje(), datos.titulo());
 
         // Validar que cursoId sea un número entero positivo
@@ -100,15 +93,11 @@ public class TopicoService {
         return toDatosDetalleTopico(savedTopico);
     }
 
-    /**
-     * Obtiene los detalles de un tópico por su ID.
-     *
-     * ⚠️ Este método NO carga las respuestas asociadas. Si necesitas la solución,
-     * usa {@link #obtenerPorIdConSolucion(Long)}.
-     *
-     * @param id ID del tópico.
-     * @return {@link DatosDetalleTopico} con la información del tópico (sin solución).
-     */
+    // Obtiene los detalles de un tópico por su ID.
+    // Este método NO carga las respuestas asociadas. Si necesitas la solución,
+    // usa {@link #obtenerPorIdConSolucion(Long)}.
+    // @param id ID del tópico.
+    // @return {@link DatosDetalleTopico} con la información del tópico (sin solución).
     @Transactional(readOnly = true)
     public DatosDetalleTopico obtenerPorId(Long id) {
         if (id == null || id <= 0) {
@@ -124,23 +113,18 @@ public class TopicoService {
         return toDatosDetalleTopico(topico);
     }
 
-    /**
-     * Obtiene los detalles de un tópico por su ID, incluyendo la solución si existe.
-     *
-     * ✅ Este método es el que debes usar cuando quieras ver un tópico solucionado
-     * con toda su información (como en el endpoint "/topicos/con-solucion").
-     *
-     * @param id ID del tópico.
-     * @return {@link DatosDetalleTopico} con la información del tópico y su solución.
-     */
+     // Obtiene los detalles de un tópico por su ID, incluyendo la solución si existe.
+     // Este método es el que debes usar cuando quieras ver un tópico solucionado
+     // con toda su información (como en el endpoint "/topicos/con-solucion").
+     // @param id ID del tópico.
+     // @return {@link DatosDetalleTopico} con la información del tópico y su solución.
+
     @Transactional(readOnly = true)
     public DatosDetalleTopico obtenerPorIdConSolucion(Long id) {
         if (id == null || id <= 0) {
             throw new ResponseStatusException(BAD_REQUEST, "El ID del tópico es obligatorio y debe ser válido.");
         }
 
-        // ⚠️ IMPORTANTE: Asegúrate de que tu repositorio cargue las respuestas.
-        // Si usas @EntityGraph o JOIN FETCH, este método funcionará correctamente.
         Topico topico = topicoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Tópico no encontrado."));
 
@@ -148,7 +132,7 @@ public class TopicoService {
         String solucion = topico.getRespuestas().stream()
                 .filter(Respuesta::isSolucion)      // Usa isSolucion() porque el campo es 'boolean solucion'
                 .findFirst()
-                .map(Respuesta::getMensaje)         // Tu campo se llama 'mensaje', no 'contenido'
+                .map(Respuesta::getMensaje)
                 .orElse(null);                      // Si no hay solución, devuelve null
 
         // Construir DTO con todos los datos + la solución
@@ -160,27 +144,25 @@ public class TopicoService {
                 topico.getStatus(),
                 topico.getAutor(),
                 topico.getCurso().getNombre(),
-                solucion  // 👈 Campo nuevo: la solución asociada al tópico
+                solucion
         );
     }
 
-    /**
-     * ✅ ESCRIBE UNA RESPUESTA (SOLUCIÓN) PARA UN TÓPICO
-     *
-     * ⚠️ Reglas de negocio críticas:
-     * - Si se marca como solución ("solucion": "True"), los campos 'mensaje' y 'autor' son OBLIGATORIOS
-     * - Si falta alguno de estos campos, se lanza excepción 400 Bad Request
-     * - ✅ Al marcar como solución, el estado del tópico CAMBIA AUTOMÁTICAMENTE a RESUELTO
-     * - ✅ Un tópico solo puede tener una solución
-     * - ✅ El autor del tópico no puede marcar su propia respuesta como solución
-     *
-     * @param topicoId ID del tópico al que se le agregará la respuesta
-     * @param datos DTO con los datos de la respuesta
-     * @return {@link DatosDetalleTopico} con la información actualizada del tópico
-     */
+     // ESCRIBE UNA RESPUESTA (SOLUCIÓN) PARA UN TÓPICO
+     // Reglas de negocio críticas:
+     // Si se marca como solución ("solucion": "True"), los campos 'mensaje' y 'autor' son OBLIGATORIOS
+     // Si falta alguno de estos campos, se lanza excepción 400 Bad Request
+     // Al marcar como solución, el estado del tópico CAMBIA AUTOMÁTICAMENTE a RESUELTO
+     // Un tópico solo puede tener una solución
+     // El autor del tópico no puede marcar su propia respuesta como solución
+     // @param topicoId ID del tópico al que se le agregará la respuesta
+     // @param datos DTO con los datos de la respuesta
+     // @return {@link DatosDetalleTopico} con la información actualizada del tópico
+
     @Transactional
     public DatosDetalleTopico escribirRespuesta(Long topicoId, DatosRespuesta datos) {
-        // ✅ VALIDACIÓN 1: Si es solución, mensaje es obligatorio
+
+        // VALIDACIÓN 1: Si es solución, mensaje es obligatorio
         if ("true".equalsIgnoreCase(datos.solucion()) &&
                 (datos.mensaje() == null || datos.mensaje().isBlank())) {
             throw new ResponseStatusException(
@@ -189,7 +171,7 @@ public class TopicoService {
             );
         }
 
-        // ✅ VALIDACIÓN 2: Si es solución, autor es obligatorio
+        // VALIDACIÓN 2: Si es solución, autor es obligatorio
         if ("true".equalsIgnoreCase(datos.solucion()) &&
                 (datos.autor() == null || datos.autor().isBlank())) {
             throw new ResponseStatusException(
@@ -198,23 +180,23 @@ public class TopicoService {
             );
         }
 
-        // ✅ BUSCAR EL TÓPICO
+        // BUSCAR EL TÓPICO
         Topico topico = topicoRepository.findById(topicoId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Tópico no encontrado."));
 
-        // ✅ APLICAR REGLAS DE NEGOCIO: Validar calidad del mensaje
+        // APLICAR REGLAS DE NEGOCIO: Validar calidad del mensaje
         topicoRules.validarCalidadMensaje(datos.mensaje(), null);
 
-        // ✅ CONVERTIR A BOOLEANO
+        // CONVERTIR A BOOLEANO
         boolean esSolucion = "true".equalsIgnoreCase(datos.solucion());
 
-        // ✅ APLICAR REGLAS DE NEGOCIO: Validar autor si es solución
+        // APLICAR REGLAS DE NEGOCIO: Validar autor si es solución
         if (esSolucion) {
             topicoRules.validarAutorSolucion(topico, datos.autor());
             topicoRules.validarUnicaSolucion(topico);
         }
 
-        // ✅ CREAR LA RESPUESTA
+        // CREAR LA RESPUESTA
         Respuesta respuesta = new Respuesta();
         respuesta.setMensaje(datos.mensaje());
         respuesta.setAutor(datos.autor());
@@ -222,42 +204,38 @@ public class TopicoService {
         respuesta.setTopico(topico);
         respuesta.setSolucion(esSolucion);
 
-        // ✅ AGREGAR LA RESPUESTA AL TÓPICO
+        // AGREGAR LA RESPUESTA AL TÓPICO
         topico.getRespuestas().add(respuesta);
 
-        // ✅ SI ES SOLUCIÓN, ACTUALIZAR ESTADO A RESUELTO
+        // SI ES SOLUCIÓN, ACTUALIZAR ESTADO A RESUELTO
         if (esSolucion) {
             topico.setStatus(Status.RESUELTO);
-            System.out.println("✅ [AUTOMÁTICO] Estado del tópico ID " + topicoId + " CAMBIADO a: RESUELTO");
+            System.out.println("[AUTOMÁTICO] Estado del tópico ID " + topicoId + " CAMBIADO a: RESUELTO");
         }
 
-        // ✅ GUARDAR Y FLUSH - PERSISTENCIA GARANTIZADA
+        // GUARDAR Y FLUSH - PERSISTENCIA GARANTIZADA
         topicoRepository.saveAndFlush(topico);
 
-        // ✅ LOG: Confirmar estado final
-        System.out.println("💾 [FINAL] Tópico ID " + topicoId + " guardado con estado: " + topico.getStatus());
+        // LOG: Confirmar estado final
+        System.out.println("[FINAL] Tópico ID " + topicoId + " guardado con estado: " + topico.getStatus());
 
-        // ✅ DEVOLVER EL TÓPICO CON SU INFORMACIÓN ACTUALIZADA
+        // DEVOLVER EL TÓPICO CON SU INFORMACIÓN ACTUALIZADA
         return obtenerPorIdConSolucion(topicoId);
     }
 
-    /**
-     * ✅ MARCA UN TÓPICO COMO RESUELTO (SOLUCIONADO)
-     *
-     * Método dedicado para cambiar el estado de un tópico a RESUELTO
-     * sin necesidad de crear una respuesta.
-     *
-     * ⚠️ Reglas de negocio:
-     * - El tópico debe existir
-     * - Solo se puede marcar como RESUELTO si está ABIERTO
-     * - ✅ NO se verifica si ya hay una solución (para permitir actualización manual)
-     *
-     * @param id ID del tópico a marcar como solucionado
-     * @return {@link DatosDetalleTopico} con la información actualizada del tópico
-     */
+     // MARCA UN TÓPICO COMO RESUELTO (SOLUCIONADO)
+     // Método dedicado para cambiar el estado de un tópico a RESUELTO
+     // sin necesidad de crear una respuesta.
+     // Reglas de negocio:
+     // El tópico debe existir
+     // Solo se puede marcar como RESUELTO si está ABIERTO
+     // NO se verifica si ya hay una solución (para permitir actualización manual)
+     // @param id ID del tópico a marcar como solucionado
+     // @return {@link DatosDetalleTopico} con la información actualizada del tópico
+
     @Transactional
     public DatosDetalleTopico marcarComoSolucionado(Long id) {
-        // ✅ VALIDACIÓN 1: Verificar que el ID sea válido
+        // VALIDACIÓN 1: Verificar que el ID sea válido
         if (id == null || id <= 0) {
             throw new ResponseStatusException(
                     BAD_REQUEST,
@@ -265,14 +243,14 @@ public class TopicoService {
             );
         }
 
-        // ✅ VALIDACIÓN 2: Buscar el tópico
+        // VALIDACIÓN 2: Buscar el tópico
         Topico topico = topicoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         NOT_FOUND,
                         "Tópico no encontrado con ID: " + id
                 ));
 
-        // ✅ VALIDACIÓN 3: Verificar si ya está resuelto
+        // VALIDACIÓN 3: Verificar si ya está resuelto
         if (topico.getStatus() == Status.RESUELTO) {
             throw new ResponseStatusException(
                     BAD_REQUEST,
@@ -280,31 +258,29 @@ public class TopicoService {
             );
         }
 
-        // ✅ LOG: Mostrar estado actual antes del cambio
-        System.out.println("🔍 [ANTES] Estado actual del tópico ID " + id + ": " + topico.getStatus());
-        System.out.println("🔍 [ANTES] Estado en BD: " + topicoRepository.findById(id).get().getStatus());
+        // LOG: Mostrar estado actual antes del cambio
+        System.out.println("[ANTES] Estado actual del tópico ID " + id + ": " + topico.getStatus());
+        System.out.println("[ANTES] Estado en BD: " + topicoRepository.findById(id).get().getStatus());
 
-        // ✅ CAMBIAR EL ESTADO A RESUELTO
+        // CAMBIAR EL ESTADO A RESUELTO
         topico.setStatus(Status.RESUELTO);
 
-        // ✅ GUARDAR Y FLUSH PARA ASEGURAR QUE SE PERSISTE
+        // GUARDAR Y FLUSH PARA ASEGURAR QUE SE PERSISTE
         topicoRepository.saveAndFlush(topico);
 
-        // ✅ LOG: Confirmar que se guardó
-        System.out.println("✅ [CAMBIO] Estado del tópico ID " + id + " CAMBIADO a: RESUELTO");
-        System.out.println("💾 [DESPUÉS] Tópico ID " + id + " GUARDADO en base de datos con estado: " + topico.getStatus());
-        System.out.println("💾 [DESPUÉS] Estado en BD: " + topicoRepository.findById(id).get().getStatus());
+        // LOG: Confirmar que se guardó
+        System.out.println("[CAMBIO] Estado del tópico ID " + id + " CAMBIADO a: RESUELTO");
+        System.out.println("[DESPUÉS] Tópico ID " + id + " GUARDADO en base de datos con estado: " + topico.getStatus());
+        System.out.println("[DESPUÉS] Estado en BD: " + topicoRepository.findById(id).get().getStatus());
 
-        // ✅ DEVOLVER EL TÓPICO CON SU INFORMACIÓN ACTUALIZADA
+        // DEVOLVER EL TÓPICO CON SU INFORMACIÓN ACTUALIZADA
         return obtenerPorIdConSolucion(id);
     }
 
-    /**
-     * Actualiza un tópico existente de forma parcial (solo campos no nulos).
-     *
-     * @param datos DTO con los campos a actualizar.
-     * @return {@link DatosDetalleTopico} actualizado.
-     */
+     // Actualiza un tópico existente de forma parcial (solo campos no nulos).
+     // @param datos DTO con los campos a actualizar.
+     // @return {@link DatosDetalleTopico} actualizado.
+
     @Transactional
     public DatosDetalleTopico actualizar(DatosActualizacionTopico datos) {
         if (datos.id() == null || datos.id() <= 0) {
@@ -339,11 +315,9 @@ public class TopicoService {
         return toDatosDetalleTopico(topico);
     }
 
-    /**
-     * Elimina lógicamente un tópico (soft delete).
-     *
-     * @param id ID del tópico a eliminar.
-     */
+     // Elimina lógicamente un tópico  delete).
+     // @param id ID del tópico a eliminar.
+
     @Transactional
     public void eliminar(Long id) {
         if (id == null || id <= 0) {
@@ -357,14 +331,11 @@ public class TopicoService {
         topicoRepository.save(topico);
     }
 
-    // ────────────────────────────────────────────────────────
     // Métodos auxiliares privados
-    // ────────────────────────────────────────────────────────
 
-    /**
-     * Convierte una cadena de texto en un Long (para cursoId).
-     * Lanza excepción si no es un número válido.
-     */
+    // Convierte una cadena de texto en un Long (para cursoId).
+    // Lanza excepción si no es un número válido.
+
     private Long parseCursoId(String cursoIdStr) {
         try {
             return Long.parseLong(cursoIdStr.trim());
@@ -373,9 +344,8 @@ public class TopicoService {
         }
     }
 
-    /**
-     * Valida que el cursoId sea un número entero positivo.
-     */
+    // Valida que el cursoId sea un número entero positivo.
+
     private void validarCursoId(String cursoIdStr) {
         Long id = parseCursoId(cursoIdStr);
         if (id <= 0) {
@@ -383,11 +353,9 @@ public class TopicoService {
         }
     }
 
-    /**
-     * Convierte una entidad {@link Topico} en un DTO de salida {@link DatosDetalleTopico}.
-     *
-     * ⚠️ Este método NO incluye la solución. Se usa en operaciones donde no se necesita.
-     */
+    // Convierte una entidad {@link Topico} en un DTO de salida {@link DatosDetalleTopico}.
+    // Este método NO incluye la solución. Se usa en operaciones donde no se necesita.
+
     private DatosDetalleTopico toDatosDetalleTopico(Topico topico) {
         return new DatosDetalleTopico(
                 topico.getId(),

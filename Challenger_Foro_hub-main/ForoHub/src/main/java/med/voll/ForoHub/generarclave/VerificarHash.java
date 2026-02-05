@@ -2,6 +2,8 @@ package med.voll.ForoHub.generarclave;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+//sirve para verificar que la clave es correcta y corresponde al hash que se genero
+
 public class VerificarHash {
     public static void main(String[] args) {
         // El hash que tienes en tu base de datos

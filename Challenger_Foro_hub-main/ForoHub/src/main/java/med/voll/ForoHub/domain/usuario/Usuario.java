@@ -5,13 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import med.voll.ForoHub.domain.Curso;
-import med.voll.ForoHub.domain.Status;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -31,13 +27,13 @@ public class Usuario implements UserDetails {
     private  String login;
     private  String contrasena;
 
-
     //se implemetan los metodos
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_USER")); // sirve para los roles de cada usuario en este caso los roles son iguales
     }
 
+    //implementando un contrato definido en la interfaz
     @Override
     public String getPassword() {
         return contrasena;
